@@ -176,13 +176,6 @@ body{
 .timer-digits{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:700;color:var(--primary);}
 .timer-sublabel{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:2px;}
 
-/* DND Warning */
-#dndBanner{
-  display:none;background:var(--danger);color:#fff;
-  padding:10px 20px;border-radius:14px;font-size:13px;font-weight:700;
-  text-align:center;margin-top:12px;animation:shake 0.4s;
-}
-@keyframes shake{0%,100%{transform:none;}25%{transform:translateX(-6px);}75%{transform:translateX(6px);};}
 
 /* ──────────────── ACTIVE RECALL CARD (break) ──────────────── */
 .recall-card{perspective:800px;margin:12px 0;cursor:pointer;}
@@ -283,18 +276,7 @@ body{
 @keyframes slideDown{from{top:0px;opacity:0;}to{top:20px;opacity:1;}}
 #eyeAlert .eye-counter{font-family:'JetBrains Mono',monospace;font-size:20px;margin:4px 0;}
 
-/* ──────────────── DND OVERLAY ──────────────── */
-#dndOverlay{
-  display:none;position:fixed;inset:0;z-index:9998;
-  background:rgba(239,68,68,0.95);backdrop-filter:blur(10px);
-  flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;color:#fff;padding:30px;
-}
-#dndOverlay.show{display:flex;animation:fadeIn 0.3s;}
-#dndOverlay h2{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin:16px 0 8px;}
-#dndOverlay p{font-size:14px;opacity:0.85;margin-bottom:24px;}
-.dnd-icon{font-size:72px;}
-#dndOverlay button{background:#fff;color:var(--danger);border:none;padding:14px 30px;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;}
+
 
 /* ──────────────── SECTION TITLE ──────────────── */
 .section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--primary);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
@@ -320,13 +302,7 @@ input[type=range]{accent-color:var(--accent);width:100%;}
   Look 20 feet away · Blink slowly · Breathe
 </div>
 
-<!-- DND OVERLAY -->
-<div id="dndOverlay">
-  <div class="dnd-icon">🚨</div>
-  <h2>PATIENT ON THE TABLE!</h2>
-  <p>You left the operating theatre during a critical session.<br>Your streak is at risk. Return immediately.</p>
-  <button onclick="dismissDND()">RETURN TO SURGERY →</button>
-</div>
+
 
 <!-- ═══════════════ HOME SCREEN ═══════════════ -->
 <div id="homeScreen" class="screen active">
@@ -426,7 +402,7 @@ input[type=range]{accent-color:var(--accent);width:100%;}
         <div class="timer-sublabel" id="timerSublabel">FOCUS</div>
       </div>
     </div>
-    <div id="dndBanner">🚨 YOU LEFT — STAY FOCUSED!</div>
+
   </div>
 
   <div style="padding:0 16px;">
@@ -567,7 +543,6 @@ let isStudyMode = false, lastTickTime = 0;
 let currentStudyMins = 50, currentBreakMins = 5;
 let eyeTimer = 0, eyeInterval = null;
 let hydrationLevel = parseFloat(ls('bb_hydration') || '100');
-let dndActive = false;
 let currentMode = 'opd';
 let audioCtx = null, audioNodes = {};
 let activeSound = null;
@@ -662,7 +637,6 @@ window.onload = () => {
   updateIVDisplay();
   renderTodos();
   applyTheme(ls('bb_theme') || 'default');
-  setupDND();
 
   // Ring init
   const circ = 2 * Math.PI * 88;
@@ -717,7 +691,6 @@ function startTimer(mins, mode) {
   document.getElementById('timerSublabel').textContent = isStudyMode ? 'FOCUS' : 'BREAK';
   document.getElementById('breakContent').style.display = isStudyMode ? 'none' : 'block';
   document.getElementById('skipBreakBtn').style.display = isStudyMode ? 'none' : 'block';
-  document.getElementById('dndBanner').style.display = 'none';
 
   if(!isStudyMode) loadBreakContent();
   showScreen('timerScreen');
@@ -1177,39 +1150,7 @@ function playBell() {
   }, 300);
 }
 
-/* ═══════════════════════════════════════
-   DO NOT DISTURB (Surgery Mode)
-═══════════════════════════════════════ */
-function setupDND() {
-  document.addEventListener('visibilitychange', () => {
-    if(document.hidden && isStudyMode && timerId) {
-      dndActive = true;
-      document.getElementById('dndBanner').style.display = 'block';
-    }
-  });
 
-  window.addEventListener('focus', () => {
-    if(dndActive) {
-      dndActive = false;
-      document.getElementById('dndOverlay').classList.remove('show');
-    }
-  });
-
-  window.addEventListener('blur', () => {
-    if(isStudyMode && timerId) {
-      setTimeout(()=>{
-        if(document.hidden || !document.hasFocus()) {
-          document.getElementById('dndOverlay').classList.add('show');
-        }
-      }, 1500);
-    }
-  });
-}
-
-function dismissDND() {
-  document.getElementById('dndOverlay').classList.remove('show');
-  dndActive = false;
-}
 
 /* ═══════════════════════════════════════
    TO-DO LIST
