@@ -3,265 +3,1255 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#5A4BAA">
+  <meta name="theme-color" content="#1a2744">
   <link rel="manifest" href="manifest.json">
-  <title>Dr. Supriya's Break Bell</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap');
-    
-    :root {
-      --lavender: #5A4BAA; --lavender-light: #E8E4F8;
-      --mint: #2BB89A; --mint-light: #D4F5EC;
-      --peach: #FFB38E; --peach-light: #FFE8DA;
-      --text: #2D2545; --bg: #FDFBFF;
-    }
+  <title>The Resident | Dr. Supriya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,500;0,700;1,300&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+<style>
+:root {
+  /* Default theme: Scrub Blue */
+  --primary: #1a2744;
+  --accent: #3d9be9;
+  --accent2: #f0a500;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --bg: #f0f4fb;
+  --card: rgba(255,255,255,0.92);
+  --card-border: rgba(255,255,255,0.6);
+  --text: #1a2744;
+  --text-muted: #6b7aa1;
+  --shadow: 0 8px 32px rgba(26,39,68,0.10);
+  --radius: 20px;
+  --water: #60b4f5;
+}
 
-    /* Screens */
-    .screen { display: none; padding: 25px; animation: fadeIn 0.4s ease; text-align: center; }
-    .screen.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+/* UNLOCKABLE THEMES */
+body.theme-emerald { --primary:#0d3320;--accent:#22c55e;--accent2:#f0a500;--water:#86efac; }
+body.theme-lavender { --primary:#2d1b5e;--accent:#a78bfa;--accent2:#f472b6;--water:#c4b5fd; }
+body.theme-crimson  { --primary:#3b0a0a;--accent:#ef4444;--accent2:#fb923c;--water:#fca5a5; }
+body.theme-teal     { --primary:#0a2e2e;--accent:#14b8a6;--accent2:#f0a500;--water:#5eead4; }
 
-    /* Home Stats */
-    .streak-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(90, 74, 170, 0.1); margin: 20px 0; }
-    .streak-val { font-size: 48px; font-weight: 900; color: var(--lavender); display: block; }
-    
-    /* Weekly Calendar */
-    .calendar { display: flex; justify-content: space-between; margin: 20px 0; }
-    .day-dot { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--lavender-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
-    .day-dot.active { background: var(--lavender); color: white; border-color: var(--lavender); }
+*{box-sizing:border-box;margin:0;padding:0;}
 
-    /* Timer Ring */
-    .timer-container { position: relative; width: 280px; height: 280px; margin: 40px auto; }
-    .progress-ring { transform: rotate(-90deg); }
-    .progress-ring__circle {
-      stroke: var(--lavender); stroke-width: 10; fill: transparent;
-      stroke-dasharray: 628; stroke-dashoffset: 628;
-      transition: stroke-dashoffset 1s linear; stroke-linecap: round;
-    }
-    .timer-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+body{
+  font-family:'DM Sans',sans-serif;color:var(--text);
+  background: var(--bg);
+  min-height:100vh;padding-bottom:80px;
+  transition: background 0.5s, color 0.5s;
+}
 
-    /* Buttons */
-    .btn { background: var(--lavender); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 800; cursor: pointer; width: 100%; font-size: 16px; transition: transform 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-skip { background: transparent; color: #999; margin-top: 15px; }
+/* Blurred hospital BG */
+.bg-layer{
+  position:fixed;inset:0;z-index:-1;
+  background:url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=60&w=1200') center/cover no-repeat;
+}
+.bg-overlay{position:fixed;inset:0;z-index:-1;background:rgba(240,244,251,0.91);backdrop-filter:blur(18px);}
 
-    /* Settings */
-    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #EEE; text-align: left; }
-    input[type="text"], select { padding: 10px; border-radius: 8px; border: 1px solid #DDD; }
+/* ──────────────── SCREENS ──────────────── */
+.screen{display:none;max-width:480px;margin:0 auto;padding:0 0 20px;}
+.screen.active{display:block;animation:slideUp 0.35s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
 
-    /* Navigation */
-    .nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #EEE; z-index: 100; }
-    .nav-item { cursor: pointer; font-weight: 700; color: #BBB; font-size: 14px; }
-    .nav-item.active { color: var(--lavender); }
+/* ──────────────── HEADER ──────────────── */
+.header{
+  background:var(--primary);color:#fff;
+  padding:28px 22px 60px;
+  border-radius:0 0 36px 36px;
+  position:relative;overflow:hidden;
+}
+.header::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,0.05);
+}
+.header h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.rank-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.12);border-radius:50px;
+  padding:4px 12px;font-size:11px;font-weight:700;margin-top:6px;
+  border:1px solid rgba(255,255,255,0.18);
+}
+.xp-bar{height:4px;background:rgba(255,255,255,0.15);border-radius:4px;margin-top:10px;}
+.xp-fill{height:100%;border-radius:4px;background:var(--accent2);transition:width 0.6s ease;}
 
-    .hidden { display: none !important; }
-  </style>
+/* ──────────────── MNEMONIC BOX ──────────────── */
+.mnemonic-box{
+  background:linear-gradient(120deg,rgba(255,255,255,0.13),rgba(255,255,255,0.05));
+  border-left:4px solid var(--accent2);border-radius:14px;
+  padding:12px 14px;margin-top:14px;backdrop-filter:blur(4px);
+}
+.mnemonic-label{font-size:9px;letter-spacing:2px;color:var(--accent2);font-weight:800;margin-bottom:4px;}
+#mnemonicText{font-size:12.5px;font-weight:500;line-height:1.5;opacity:0.95;}
+
+/* ──────────────── CARDS / GRID ──────────────── */
+.content-pad{padding:0 16px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:-44px;margin-bottom:0;}
+
+.card{
+  background:var(--card);border-radius:var(--radius);
+  padding:18px;margin-bottom:14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--card-border);
+  backdrop-filter:blur(8px);
+  position:relative;overflow:hidden;
+}
+.card-label{font-size:9px;letter-spacing:2px;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.card-val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--primary);}
+
+/* ──────────────── IV BAG ──────────────── */
+.iv-wrap{text-align:center;cursor:pointer;}
+.iv-wrap:active{transform:scale(0.95);}
+#iv-bag{height:56px;display:block;margin:4px auto;}
+.iv-tap{font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--text-muted);margin-top:2px;}
+
+/* ──────────────── MODE SELECTOR ──────────────── */
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.btn-mode{
+  border:2px solid var(--card-border);background:var(--card);
+  border-radius:14px;padding:12px 6px;cursor:pointer;text-align:center;
+  transition:0.25s;user-select:none;
+}
+.btn-mode.active{border-color:var(--accent);background:rgba(61,155,233,0.1);}
+.btn-mode h5{font-size:11px;font-weight:700;color:var(--primary);}
+.btn-mode p{font-size:9px;color:var(--text-muted);margin-top:2px;}
+
+/* ──────────────── MAIN BUTTON ──────────────── */
+.btn-main{
+  width:100%;padding:15px;border-radius:14px;border:none;
+  background:var(--accent);color:#fff;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  letter-spacing:1px;cursor:pointer;
+  box-shadow:0 6px 20px rgba(61,155,233,0.35);
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+.btn-main:active{transform:scale(0.97);box-shadow:0 2px 10px rgba(61,155,233,0.2);}
+.btn-secondary{background:rgba(0,0,0,0.06);color:var(--primary);box-shadow:none;}
+
+/* ──────────────── TODO ──────────────── */
+.todo-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.05);}
+.todo-item:last-child{border-bottom:none;}
+.todo-item input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;}
+.todo-text{font-size:13px;flex:1;}
+.todo-text.done{text-decoration:line-through;color:var(--text-muted);}
+.todo-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:0 4px;}
+.todo-del:hover{color:var(--danger);}
+.todo-input-row{display:flex;gap:8px;margin-top:10px;}
+.todo-input-row input{flex:1;padding:10px 14px;border-radius:12px;border:1.5px solid var(--card-border);font-size:13px;background:rgba(255,255,255,0.7);color:var(--text);}
+.todo-input-row input:focus{outline:none;border-color:var(--accent);}
+.todo-add{background:var(--primary);color:#fff;border:none;padding:10px 16px;border-radius:12px;font-size:18px;cursor:pointer;}
+
+/* ──────────────── AMBIENT SOUNDS ──────────────── */
+.sound-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sound-btn{
+  border:1.5px solid var(--card-border);background:var(--card);
+  border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;
+  font-size:20px;transition:0.2s;
+}
+.sound-btn.playing{border-color:var(--accent);background:rgba(61,155,233,0.12);box-shadow:0 0 14px rgba(61,155,233,0.2);}
+.sound-label{font-size:9px;font-weight:700;color:var(--text-muted);margin-top:4px;display:block;}
+
+/* ──────────────── TIMER SCREEN ──────────────── */
+#timerScreen{padding:20px 16px;}
+.timer-hero{text-align:center;padding:30px 0 10px;}
+.timer-mode-chip{
+  display:inline-block;background:var(--primary);color:#fff;
+  padding:6px 18px;border-radius:50px;font-size:11px;font-weight:800;
+  letter-spacing:2px;margin-bottom:18px;
+}
+.timer-ring-wrap{position:relative;display:inline-block;margin:10px 0;}
+.timer-ring-wrap svg{display:block;}
+#ring-track{fill:none;stroke:rgba(0,0,0,0.07);stroke-width:10;}
+#ring-progress{
+  fill:none;stroke:var(--accent);stroke-width:10;
+  stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:50% 50%;
+  transition:stroke-dashoffset 0.5s linear;
+}
+.timer-inner-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.timer-digits{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:700;color:var(--primary);}
+.timer-sublabel{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:2px;}
+
+/* DND Warning */
+#dndBanner{
+  display:none;background:var(--danger);color:#fff;
+  padding:10px 20px;border-radius:14px;font-size:13px;font-weight:700;
+  text-align:center;margin-top:12px;animation:shake 0.4s;
+}
+@keyframes shake{0%,100%{transform:none;}25%{transform:translateX(-6px);}75%{transform:translateX(6px);};}
+
+/* ──────────────── ACTIVE RECALL CARD (break) ──────────────── */
+.recall-card{perspective:800px;margin:12px 0;cursor:pointer;}
+.recall-inner{
+  position:relative;height:200px;transform-style:preserve-3d;
+  transition:transform 0.6s cubic-bezier(.4,0,.2,1);
+}
+.recall-card.flipped .recall-inner{transform:rotateY(180deg);}
+.recall-front,.recall-back{
+  position:absolute;inset:0;border-radius:18px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:18px;text-align:center;
+}
+.recall-front{background:linear-gradient(135deg,var(--primary),#2d4a8a);color:#fff;}
+.recall-back{background:linear-gradient(135deg,var(--success),#16a34a);color:#fff;transform:rotateY(180deg);}
+.recall-hint{font-size:10px;letter-spacing:1.5px;opacity:0.7;margin-top:8px;}
+.recall-q{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1.4;}
+
+/* Posture circuit */
+.circuit-item{
+  display:flex;align-items:center;gap:12px;padding:8px 0;
+  border-bottom:1px solid rgba(0,0,0,0.06);
+}
+.circuit-icon{font-size:22px;}
+.circuit-info{flex:1;}
+.circuit-name{font-size:13px;font-weight:600;}
+.circuit-sub{font-size:11px;color:var(--text-muted);}
+.circuit-bar{height:4px;background:rgba(0,0,0,0.06);border-radius:4px;margin-top:4px;overflow:hidden;}
+.circuit-bar-fill{height:100%;width:0%;border-radius:4px;background:var(--accent);transition:width 0.2s;}
+
+/* ──────────────── POSTURE ANIMATION ──────────────── */
+.posture-anim{text-align:center;padding:10px 0;}
+.posture-anim svg{display:block;margin:0 auto;}
+
+/* ──────────────── ANALYTICS SCREEN ──────────────── */
+#analyticsScreen{padding:16px;}
+.analytics-header{
+  background:var(--primary);color:#fff;border-radius:var(--radius);
+  padding:22px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.analytics-header::after{
+  content:'📊';position:absolute;right:20px;top:16px;font-size:48px;opacity:0.2;
+}
+.analytics-header h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+.analytics-header p{font-size:12px;opacity:0.7;margin-top:4px;}
+.week-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin:10px 0;}
+.day-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.day-bar{width:100%;background:var(--accent);border-radius:6px 6px 0 0;min-height:4px;transition:height 0.6s ease;}
+.day-label{font-size:9px;color:var(--text-muted);font-weight:700;}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.metric-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--card-border);}
+.metric-card .val{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--primary);}
+.metric-card .lbl{font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;font-weight:600;}
+.score-ring-wrap{display:flex;justify-content:center;margin:10px 0;}
+
+/* ──────────────── RANKS SCREEN ──────────────── */
+#ranksScreen{padding:16px;}
+.rank-list{display:flex;flex-direction:column;gap:10px;}
+.rank-row{
+  background:var(--card);border-radius:16px;padding:16px;
+  border:2px solid var(--card-border);display:flex;align-items:center;gap:14px;
+}
+.rank-row.current{border-color:var(--accent2);background:rgba(240,165,0,0.06);}
+.rank-row.locked{opacity:0.45;}
+.rank-emoji{font-size:28px;}
+.rank-info h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
+.rank-info p{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.rank-badge-status{margin-left:auto;font-size:10px;font-weight:800;padding:4px 10px;border-radius:50px;}
+.status-current{background:var(--accent2);color:#fff;}
+.status-done{background:var(--success);color:#fff;}
+.status-locked{background:#e2e8f0;color:var(--text-muted);}
+.theme-unlock{margin-top:8px;font-size:10px;color:var(--text-muted);}
+.theme-swatch{display:inline-flex;gap:4px;margin-top:4px;}
+.swatch{width:14px;height:14px;border-radius:50%;display:inline-block;}
+
+/* ──────────────── BOTTOM NAV ──────────────── */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);
+  display:flex;justify-content:space-around;
+  padding:10px 0 14px;border-top:1px solid rgba(0,0,0,0.06);
+  z-index:999;
+}
+.nav-item{cursor:pointer;text-align:center;padding:4px 10px;border-radius:12px;transition:0.2s;}
+.nav-item .nav-icon{font-size:20px;}
+.nav-item .nav-lbl{font-size:10px;font-weight:700;color:#94a3b8;margin-top:2px;display:block;}
+.nav-item.active .nav-lbl{color:var(--accent);}
+
+/* ──────────────── EYE ALERT ──────────────── */
+#eyeAlert{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:var(--danger);color:#fff;padding:14px 24px;border-radius:50px;
+  font-weight:800;z-index:9999;display:none;
+  box-shadow:0 10px 30px rgba(239,68,68,0.4);text-align:center;
+  width:85%;font-size:13px;animation:slideDown 0.3s ease;
+}
+@keyframes slideDown{from{top:0px;opacity:0;}to{top:20px;opacity:1;}}
+#eyeAlert .eye-counter{font-family:'JetBrains Mono',monospace;font-size:20px;margin:4px 0;}
+
+/* ──────────────── DND OVERLAY ──────────────── */
+#dndOverlay{
+  display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(239,68,68,0.95);backdrop-filter:blur(10px);
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;color:#fff;padding:30px;
+}
+#dndOverlay.show{display:flex;animation:fadeIn 0.3s;}
+#dndOverlay h2{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin:16px 0 8px;}
+#dndOverlay p{font-size:14px;opacity:0.85;margin-bottom:24px;}
+.dnd-icon{font-size:72px;}
+#dndOverlay button{background:#fff;color:var(--danger);border:none;padding:14px 30px;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;}
+
+/* ──────────────── SECTION TITLE ──────────────── */
+.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--primary);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+
+/* tabs within a card */
+.card-tabs{display:flex;gap:4px;margin-bottom:12px;}
+.card-tab{padding:5px 12px;border-radius:50px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:rgba(0,0,0,0.05);color:var(--text-muted);transition:0.2s;}
+.card-tab.active{background:var(--primary);color:#fff;}
+
+/* ──────────────── INPUT ──────────────── */
+input[type=range]{accent-color:var(--accent);width:100%;}
+</style>
 </head>
-<body>
 
-  <div id="home" class="screen active">
-    <h1 id="greeting">Hello, Dr. Supriya!</h1>
-    <p id="quote" style="font-style: italic; color: var(--lavender); margin-top: 5px;">"Don't forget to breathe."</p>
-    
-    <div class="streak-card">
-      <span class="streak-val">🔥 <span id="streakCount">0</span></span>
-      <p id="streakMilestone">Great start, Doctor Supriya! 🌱</p>
-      
-      <div class="calendar" id="weeklyCalendar">
-        <div class="day-dot">M</div><div class="day-dot">T</div><div class="day-dot">W</div>
-        <div class="day-dot">T</div><div class="day-dot">F</div><div class="day-dot">S</div><div class="day-dot">S</div>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-overlay"></div>
+
+<!-- EYE STRAIN ALERT -->
+<div id="eyeAlert">
+  👁 EYE STRAIN ALERT — 20-20-20 RULE
+  <div class="eye-counter" id="eyeCountdown">20</div>
+  Look 20 feet away · Blink slowly · Breathe
+</div>
+
+<!-- DND OVERLAY -->
+<div id="dndOverlay">
+  <div class="dnd-icon">🚨</div>
+  <h2>PATIENT ON THE TABLE!</h2>
+  <p>You left the operating theatre during a critical session.<br>Your streak is at risk. Return immediately.</p>
+  <button onclick="dismissDND()">RETURN TO SURGERY →</button>
+</div>
+
+<!-- ═══════════════ HOME SCREEN ═══════════════ -->
+<div id="homeScreen" class="screen active">
+  <div class="header">
+    <h1>Dr. Supriya 🩺</h1>
+    <div class="rank-badge" id="rankBadge">🏥 Intern · Day <span id="streakDay">0</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    <div class="mnemonic-box">
+      <div class="mnemonic-label">🧠 MNEMONIC OF THE SHIFT</div>
+      <p id="mnemonicText">Loading clinical pearl...</p>
+    </div>
+  </div>
+
+  <div class="content-pad">
+    <div class="stat-grid">
+      <div class="card iv-wrap" onclick="refillHydration()" style="padding:14px;">
+        <div class="card-label">IV HYDRATION</div>
+        <svg id="iv-bag" viewBox="0 0 80 110">
+          <path d="M15,10 Q40,-4 65,10 L65,90 Q65,108 40,108 Q15,108 15,90 Z" fill="none" stroke="#d0daea" stroke-width="2.5"/>
+          <clipPath id="ivClip"><path d="M17,12 Q40,-2 63,12 L63,90 Q63,106 40,106 Q17,106 17,90 Z"/></clipPath>
+          <rect id="iv-fluid" x="17" y="20" width="46" height="86" fill="var(--water)" rx="2" clip-path="url(#ivClip)"/>
+          <line x1="40" y1="108" x2="40" y2="115" stroke="#d0daea" stroke-width="2"/>
+          <circle cx="40" cy="118" r="4" fill="#d0daea"/>
+          <rect x="34" y="4" width="12" height="8" rx="4" fill="#d0daea"/>
+          <line x1="40" y1="0" x2="40" y2="6" stroke="#d0daea" stroke-width="1.5"/>
+        </svg>
+        <p id="hydrationPct" class="iv-tap">TAP TO REFILL</p>
+      </div>
+      <div class="card">
+        <div class="card-label">TOTAL STUDY HRS</div>
+        <div class="card-val">⏳<span id="totalHrs">0.0</span>h</div>
+        <div style="font-size:11px;color:var(--success);margin-top:8px;font-weight:700;">🔥 Streak: <span id="streakCount">0</span> days</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;font-weight:600;">Sessions: <span id="sessionCount">0</span></div>
       </div>
     </div>
 
-    <button class="btn" onclick="startWorkSession()">START FOCUS SESSION</button>
-  </div>
+    <!-- Mode Selector -->
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">📋 SELECT SHIFT MODE</div>
+      <div class="mode-grid">
+        <div class="btn-mode active" id="mode-opd" onclick="setMode('opd',50,5)">
+          <h5>🏥 OPD</h5><p>50m / 5m</p>
+        </div>
+        <div class="btn-mode" id="mode-emergency" onclick="setMode('emergency',25,3)">
+          <h5>🚨 EMERG</h5><p>25m / 3m</p>
+        </div>
+        <div class="btn-mode" id="mode-surgery" onclick="setMode('surgery',90,10)">
+          <h5>🔪 SURG</h5><p>90m / 10m</p>
+        </div>
+      </div>
+      <button class="btn-main" onclick="startShift()">▶ START CLINICAL FOCUS</button>
+    </div>
 
-  <div id="timerScreen" class="screen">
-    <h1 id="timerLabel">Focusing...</h1>
-    <div class="timer-container">
-      <svg class="progress-ring" height="280" width="280">
-        <circle cx="140" cy="140" r="100" stroke="var(--lavender-light)" stroke-width="10" fill="transparent" />
-        <circle id="circleProgress" class="progress-ring__circle" cx="140" cy="140" r="100" />
+    <!-- Ambient Sounds -->
+    <div class="card">
+      <div class="section-title">🎵 AMBIENT ATMOSPHERE</div>
+      <div class="sound-grid">
+        <div class="sound-btn" id="snd-brown" onclick="toggleSound('brown')">
+          📡<span class="sound-label">BROWN NOISE</span>
+        </div>
+        <div class="sound-btn" id="snd-rain" onclick="toggleSound('rain')">
+          🌧️<span class="sound-label">RAIN</span>
+        </div>
+        <div class="sound-btn" id="snd-library" onclick="toggleSound('library')">
+          📚<span class="sound-label">LIBRARY</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:11px;color:var(--text-muted);font-weight:600;">VOL</span>
+        <input type="range" id="volumeSlider" min="0" max="100" value="40" oninput="setVolume(this.value)">
+      </div>
+    </div>
+
+    <!-- To-Do -->
+    <div class="card">
+      <div class="section-title">📋 CLINICAL TO-DO</div>
+      <div id="todoList"></div>
+      <div class="todo-input-row">
+        <input type="text" id="newTaskInput" placeholder="Add next task..." onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="todo-add" onclick="addTodo()">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TIMER SCREEN ═══════════════ -->
+<div id="timerScreen" class="screen">
+  <div class="timer-hero">
+    <div class="timer-mode-chip" id="timerLabel">IN SURGERY</div>
+    <div class="timer-ring-wrap">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle id="ring-track" cx="100" cy="100" r="88"/>
+        <circle id="ring-progress" cx="100" cy="100" r="88"/>
       </svg>
-      <div class="timer-display"><h2 id="timeText" style="font-size: 48px; font-weight: 900;">45:00</h2></div>
+      <div class="timer-inner-text">
+        <div class="timer-digits" id="timeText">50:00</div>
+        <div class="timer-sublabel" id="timerSublabel">FOCUS</div>
+      </div>
     </div>
-    <div id="breakMessage" class="hidden">
-      <p style="margin-bottom: 20px;">Hey Doctor Supriya! 🌸 It's time for a well-deserved break! Take 7 minutes to breathe.</p>
-    </div>
-    <button class="btn btn-skip" id="skipBtn" onclick="confirmSkip()">Skip Break</button>
-    <button class="btn btn-secondary hidden" id="cancelBtn" onclick="resetApp()">Cancel Session</button>
+    <div id="dndBanner">🚨 YOU LEFT — STAY FOCUSED!</div>
   </div>
 
-  <div id="settings" class="screen">
-    <h2>Settings</h2>
-    <div class="setting-row">
-      <span>Your Name:</span>
-      <input type="text" id="prefName" onchange="updatePrefs()" placeholder="Doctor Supriya">
-    </div>
-    <div class="setting-row">
-      <span>Session (mins):</span>
-      <select id="prefSession" onchange="updatePrefs()">
-        <option value="45">45 Minutes</option>
-        <option value="60">60 Minutes</option>
-        <option value="90">90 Minutes</option>
-      </select>
-    </div>
-    <div class="setting-row"><span>Sound & Vibration</span><input type="checkbox" checked id="prefSound"></div>
-    <div class="setting-row"><span>Show Calendar</span><input type="checkbox" checked id="prefCal" onchange="toggleCal()"></div>
-    <button class="btn" style="margin-top: 30px;" onclick="resetStreak()">Reset Data</button>
-  </div>
+  <div style="padding:0 16px;">
+    <!-- Break content (hidden during focus) -->
+    <div id="breakContent" style="display:none;">
+      <!-- Flashcard -->
+      <div class="section-title">🧠 ACTIVE RECALL · TAP TO REVEAL</div>
+      <div class="recall-card" id="recallCard" onclick="flipCard()">
+        <div class="recall-inner" id="recallInner">
+          <div class="recall-front">
+            <div class="recall-q" id="flashQ">Loading question...</div>
+            <div class="recall-hint">TAP TO FLIP 👆</div>
+          </div>
+          <div class="recall-back">
+            <div class="recall-q" id="flashA">Answer here</div>
+            <div class="recall-hint">GREAT WORK! 🎯</div>
+          </div>
+        </div>
+      </div>
 
-  <nav class="nav">
-    <div class="nav-item active" onclick="showScreen('home')">🏠 Home</div>
-    <div class="nav-item" onclick="showScreen('timerScreen')">⏱️ Timer</div>
-    <div class="nav-item" onclick="showScreen('settings')">⚙️ Settings</div>
-  </nav>
+      <!-- Posture Guide -->
+      <div class="card" style="margin-top:0;">
+        <div class="section-title">🧘 POSTURE RECOVERY CIRCUIT</div>
+        <div class="posture-anim">
+          <!-- Wall stand animation (CSS-only SVG figure) -->
+          <svg width="120" height="100" viewBox="0 0 120 100">
+            <style>
+              .fig-head{animation:nod 2s ease-in-out infinite;}
+              @keyframes nod{0%,100%{transform:none;}50%{transform:translateY(-2px);}}
+            </style>
+            <!-- Wall -->
+            <rect x="95" y="5" width="6" height="90" rx="3" fill="var(--accent)" opacity="0.4"/>
+            <!-- Body against wall -->
+            <circle class="fig-head" cx="78" cy="22" r="11" fill="var(--primary)" opacity="0.7"/>
+            <line x1="78" y1="33" x2="78" y2="65" stroke="var(--primary)" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+            <!-- spine aligned to wall -->
+            <line x1="78" y1="65" x2="68" y2="85" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+            <line x1="78" y1="65" x2="88" y2="85" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+            <line x1="78" y1="40" x2="62" y2="55" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+            <line x1="78" y1="40" x2="94" y2="50" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+            <text x="10" y="55" font-size="9" fill="var(--text-muted)" font-weight="700">ALIGN HEAD</text>
+            <text x="10" y="67" font-size="9" fill="var(--text-muted)">SHOULDERS</text>
+            <text x="10" y="79" font-size="9" fill="var(--text-muted)">&amp; GLUTES</text>
+          </svg>
+        </div>
+        <div id="circuitList"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn-main btn-secondary" onclick="abortSession()" style="flex:1;">ABORT SESSION</button>
+      <button class="btn-main" id="skipBreakBtn" style="display:none;flex:1;" onclick="skipBreak()">SKIP BREAK →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ANALYTICS SCREEN ═══════════════ -->
+<div id="analyticsScreen" class="screen">
+  <div style="padding:16px;">
+    <div class="analytics-header">
+      <h2>📋 WEEKLY REPORT</h2>
+      <p id="reportDate">Loading...</p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">🗓 DAILY STUDY HOURS</div>
+      <div class="week-bars" id="weekBars"></div>
+      <div style="display:flex;justify-content:space-between;" id="weekLabels"></div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="lbl">ADHERENCE RATE</div>
+        <div class="val" id="adherenceRate">0%</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Breaks taken vs skipped</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">SURGERY HOURS</div>
+        <div class="val" id="surgeryHrs">0h</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Deep focus time</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">POSTURE SCORE</div>
+        <div class="val" id="postureScore">0%</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Circuits completed</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">SESSIONS DONE</div>
+        <div class="val" id="totalSessions">0</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">This week</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">💧 HYDRATION LOG</div>
+      <div id="hydrationLog" style="font-size:13px;color:var(--text-muted);">No data yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RANKS SCREEN ═══════════════ -->
+<div id="ranksScreen" class="screen">
+  <div style="padding:16px;">
+    <div class="card" style="background:var(--primary);color:#fff;margin-bottom:14px;">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">🏆 RESIDENCY PATH</div>
+      <div style="font-size:12px;opacity:0.7;margin-top:4px;">Complete streaks to advance your career & unlock new scrub colors</div>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">🎨 SCRUB THEMES</div>
+      <div id="themeButtons" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<nav class="nav">
+  <div class="nav-item active" onclick="showScreen('homeScreen')" id="nav-home">
+    <div class="nav-icon">🏥</div><span class="nav-lbl">WARD</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('timerScreen')" id="nav-timer">
+    <div class="nav-icon">⏱</div><span class="nav-lbl">STAT</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('analyticsScreen');renderAnalytics();" id="nav-analytics">
+    <div class="nav-icon">📊</div><span class="nav-lbl">REPORT</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('ranksScreen');renderRanks();" id="nav-ranks">
+    <div class="nav-icon">🏆</div><span class="nav-lbl">RANKS</span>
+  </div>
+</nav>
 
 <script>
-  // --- Configuration & State ---
-  let timerId = null;
-  let timeLeft = 0;
-  let totalDuration = 0;
-  let isBreakMode = false;
-  let userPrefs = JSON.parse(localStorage.getItem('bb_prefs')) || { name: "Doctor Supriya", session: 45, sound: true, cal: true };
-  let stats = JSON.parse(localStorage.getItem('bb_stats')) || { streak: 0, lastDate: null, history: [] };
+/* ═══════════════════════════════════════
+   DATA & STATE
+═══════════════════════════════════════ */
+let timerId = null, timeLeft = 0, totalTime = 0;
+let isStudyMode = false, lastTickTime = 0;
+let currentStudyMins = 50, currentBreakMins = 5;
+let eyeTimer = 0, eyeInterval = null;
+let hydrationLevel = parseFloat(ls('bb_hydration') || '100');
+let dndActive = false;
+let currentMode = 'opd';
+let audioCtx = null, audioNodes = {};
+let activeSound = null;
+let currentVolume = 0.4;
+let cardFlipped = false;
 
-  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+// Storage helpers
+function ls(k){return localStorage.getItem(k);}
+function ss(k,v){localStorage.setItem(k,v);}
 
-  // --- Core Functions ---
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
+/* ═══════════════════════════════════════
+   MNEMONICS DATABASE (expanded)
+═══════════════════════════════════════ */
+const mnemonics = [
+  {tag:"Rheumatic Fever",text:"SCARED: Sydenham chorea · Carditis · Arthralgia · Rash · Erythema marginatum · D-elevated ESR"},
+  {tag:"Multiple Myeloma",text:"CRAB: Calcium↑ · Renal failure · Anemia · Bone lesions"},
+  {tag:"Pancreatitis Causes",text:"GET SMASHED: Gallstones · Ethanol · Trauma · Steroids · Mumps · Autoimmune · Scorpion · Hypercalcemia · ERCP · Drugs"},
+  {tag:"Croup X-Ray",text:"STEEP: Subglottic Tracheal narrowing — the classic Steeple sign"},
+  {tag:"Cushing Syndrome",text:"FADS: Fat redistribution · Acne/striae · DM · Striae/Skin thinning"},
+  {tag:"SLE Features",text:"SOAP BRAIN MD: Serositis · Oral ulcers · Arthritis · Photosensitivity · Blood disorders · Renal · ANA · Immunologic · Neuro · Malar rash · Discoid rash"},
+  {tag:"Aortic Stenosis Signs",text:"SAD: Syncope · Angina · Dyspnea (in order of increasing severity)"},
+  {tag:"Organophosphate Toxicity",text:"SLUDGE: Salivation · Lacrimation · Urination · Defecation · GI upset · Emesis"},
+  {tag:"Coagulation Pathway",text:"1972: Factors in intrinsic pathway end in 2 (12,11,9,8); extrinsic starts with 7"},
+  {tag:"Causes of Raised ALP",text:"ABCDE: A-hepatic diseases · Bone disorders · Cholestasis · Drugs · Extra-hepatic obstruction"},
+  {tag:"Horner Syndrome",text:"SPAM: Sympathetic Ptosis · Anhydrosis · Miosis (PAM on 3rd order neuron)"},
+  {tag:"COPD vs Asthma",text:"COPD: age>40, smoker, FEV1/FVC<0.70, no reversibility — Asthma: younger, allergic, reversible"},
+  {tag:"Bacteria — Gram + Cocci",text:"SNEAKY STAPH: Staphylococcus (clusters) vs Streptococcus (chains)"},
+  {tag:"Thyroid Cancer Types",text:"PAPF: Papillary(80%) · follicular · Anaplastic · Medullary (MEN-2)"},
+  {tag:"DVT Signs",text:"HOPS: Homans sign · Oedema · Pain · Swelling (sensitivity low — use Wells Score)"},
+];
 
-  function startWorkSession() {
-    isBreakMode = false;
-    timeLeft = userPrefs.session * 60;
-    totalDuration = timeLeft;
-    document.getElementById('timerLabel').innerText = "Focusing...";
-    document.getElementById('breakMessage').classList.add('hidden');
-    document.getElementById('skipBtn').classList.add('hidden');
-    document.getElementById('cancelBtn').classList.remove('hidden');
-    showScreen('timerScreen');
-    runCountdown();
-  }
+/* ═══════════════════════════════════════
+   FLASHCARD DATABASE
+═══════════════════════════════════════ */
+const flashcards = [
+  {q:"What does an 'Owl-eye' appearance on histology suggest?", a:"Reed-Sternberg cells → Hodgkin Lymphoma"},
+  {q:"Chest X-ray: Boot-shaped heart. What condition?", a:"Tetralogy of Fallot (RVH + small PA)"},
+  {q:"Irregularly irregular rhythm with absent P-waves on ECG?", a:"Atrial Fibrillation — rate-control vs rhythm-control"},
+  {q:"Scaphoid fracture: which artery is at risk?", a:"Radial artery (retrograde supply) → avascular necrosis risk"},
+  {q:"Koilonychia is associated with what deficiency?", a:"Iron deficiency anaemia"},
+  {q:"'Lead-pipe' appearance on barium enema?", a:"Ulcerative Colitis (continuous, mucosal)"},
+  {q:"What's the first-line treatment for H. pylori eradication?", a:"PPI + Clarithromycin + Amoxicillin for 7–14 days (Triple therapy)"},
+  {q:"Charcot's triad components?", a:"Fever + Jaundice + RUQ pain → Cholangitis"},
+  {q:"Beck's triad in cardiac tamponade?", a:"Hypotension · Muffled heart sounds · JVD"},
+  {q:"Which nerve is damaged in Saturday night palsy?", a:"Radial nerve → wrist drop"},
+  {q:"Psammoma bodies are seen in which cancers?", a:"Papillary thyroid Ca · Serous ovarian Ca · Meningioma · Mesothelioma (TSMM)"},
+  {q:"What is Virchow's triad?", a:"Stasis · Endothelial injury · Hypercoagulability → DVT/PE"},
+  {q:"First-line antibiotic for community-acquired pneumonia (outpatient)?", a:"Amoxicillin (or doxycycline/azithromycin if atypical suspected)"},
+  {q:"Creatinine clearance formula (Cockroft-Gault)?", a:"[(140−age) × weight(kg) / 72 × Cr(mg/dL)] × 0.85 if female"},
+  {q:"At what CD4 count is Pneumocystis jirovecii prophylaxis started?", a:"CD4 < 200 cells/μL → Co-trimoxazole"},
+];
 
-  function runCountdown() {
-    if (timerId) clearInterval(timerId);
-    timerId = setInterval(() => {
-      timeLeft--;
-      updateUI();
-      if (timeLeft <= 0) handleTimerEnd();
-    }, 1000);
-  }
+/* ═══════════════════════════════════════
+   POSTURE CIRCUITS
+═══════════════════════════════════════ */
+const circuits = [
+  {icon:"🧱", name:"Wall Stand", sub:"30 seconds — head, shoulders, glutes touching wall", dur:30},
+  {icon:"🌀", name:"Chin Tucks", sub:"10 repetitions — gently retract chin", dur:20},
+  {icon:"🦋", name:"Wall Angels", sub:"10 reps — arms slide up the wall", dur:30},
+  {icon:"👁️", name:"20-20-20", sub:"Look 20 ft away for 20 seconds — blink slowly", dur:20},
+  {icon:"🚶", name:"Step-Ups", sub:"1 minute — alternate legs on a step or book", dur:60},
+];
 
-  function updateUI() {
-    const m = Math.floor(timeLeft / 60);
-    const s = timeLeft % 60;
-    document.getElementById('timeText').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-    const offset = 628 - (timeLeft / totalDuration) * 628;
-    document.getElementById('circleProgress').style.strokeDashoffset = offset;
-  }
+/* ═══════════════════════════════════════
+   RANKS SYSTEM
+═══════════════════════════════════════ */
+const RANKS = [
+  {id:'intern',    title:'Intern',          emoji:'🏥', days:0,   theme:null,       color:'#6b7aa1'},
+  {id:'jr1',       title:'Junior Resident', emoji:'🩺', days:7,   theme:'emerald',  color:'#22c55e'},
+  {id:'senior',    title:'Senior Resident', emoji:'⚕️', days:22,  theme:'lavender', color:'#a78bfa'},
+  {id:'registrar', title:'Registrar',       emoji:'🔬', days:50,  theme:'crimson',  color:'#ef4444'},
+  {id:'consultant',title:'Consultant',      emoji:'🏆', days:100, theme:'teal',     color:'#14b8a6'},
+];
 
-  function handleTimerEnd() {
-    clearInterval(timerId);
-    if(userPrefs.sound) audio.play();
-    if(userPrefs.sound && 'vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+const THEMES = [
+  {id:'default',   label:'Navy Blue',   colors:['#1a2744','#3d9be9','#f0a500'], req:0},
+  {id:'emerald',   label:'Emerald',     colors:['#0d3320','#22c55e','#f0a500'], req:7},
+  {id:'lavender',  label:'Lavender',    colors:['#2d1b5e','#a78bfa','#f472b6'], req:22},
+  {id:'crimson',   label:'Crimson',     colors:['#3b0a0a','#ef4444','#fb923c'], req:50},
+  {id:'teal',      label:'Teal',        colors:['#0a2e2e','#14b8a6','#f0a500'], req:100},
+];
 
-    if (!isBreakMode) {
-      // Transition to 7-min Break
-      isBreakMode = true;
-      timeLeft = 7 * 60; // 7 Minutes
-      totalDuration = timeLeft;
-      document.getElementById('timerLabel').innerText = "Break Time!";
-      document.getElementById('breakMessage').classList.remove('hidden');
-      document.getElementById('skipBtn').classList.remove('hidden');
-      document.getElementById('cancelBtn').classList.add('hidden');
-      
-      notify(`Good Job, ${userPrefs.name}! 🌟`, "Time for a well-deserved 7-minute break.");
-      runCountdown();
-    } else {
-      // Break Over
-      updateStreak();
-      alert(`Welcome back, ${userPrefs.name}! Let's keep up the great work! 💫`);
-      showScreen('home');
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+window.onload = () => {
+  // Mnemonic
+  const m = mnemonics[Math.floor(Math.random()*mnemonics.length)];
+  document.getElementById('mnemonicText').textContent = `[${m.tag}] ${m.text}`;
+  
+  updateDashboard();
+  updateIVDisplay();
+  renderTodos();
+  applyTheme(ls('bb_theme') || 'default');
+  setupDND();
+
+  // Ring init
+  const circ = 2 * Math.PI * 88;
+  const r = document.getElementById('ring-progress');
+  r.style.strokeDasharray = circ;
+  r.style.strokeDashoffset = circ;
+};
+
+/* ═══════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {homeScreen:'nav-home',timerScreen:'nav-timer',analyticsScreen:'nav-analytics',ranksScreen:'nav-ranks'};
+  const el = document.getElementById(map[id]);
+  if(el) el.classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   MODE SELECTION
+═══════════════════════════════════════ */
+function setMode(id, sMins, bMins) {
+  currentStudyMins = sMins; currentBreakMins = bMins; currentMode = id;
+  document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+  document.getElementById(`mode-${id}`).classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   TIMER ENGINE
+═══════════════════════════════════════ */
+function startShift() {
+  // Track session start
+  let sessions = parseInt(ls('bb_sessions')||'0');
+  ss('bb_sessions', sessions+1);
+  ss('bb_sessions_started', (parseInt(ls('bb_sessions_started')||'0')+1));
+  startTimer(currentStudyMins, 'study');
+}
+
+function startTimer(mins, mode) {
+  if(timerId) clearInterval(timerId);
+  timeLeft = mins * 60; totalTime = timeLeft;
+  isStudyMode = (mode === 'study');
+  lastTickTime = Date.now(); eyeTimer = 0;
+  cardFlipped = false;
+
+  // Update UI
+  document.getElementById('timerLabel').textContent = isStudyMode
+    ? (currentMode==='surgery'?'IN SURGERY 🔪': currentMode==='emergency'?'EMERGENCY 🚨':'OPD SESSION 🏥')
+    : 'VITAL RECOVERY 🧘';
+  document.getElementById('timerSublabel').textContent = isStudyMode ? 'FOCUS' : 'BREAK';
+  document.getElementById('breakContent').style.display = isStudyMode ? 'none' : 'block';
+  document.getElementById('skipBreakBtn').style.display = isStudyMode ? 'none' : 'block';
+  document.getElementById('dndBanner').style.display = 'none';
+
+  if(!isStudyMode) loadBreakContent();
+  showScreen('timerScreen');
+  runTimer();
+}
+
+function runTimer() {
+  if(timerId) clearInterval(timerId);
+  timerId = setInterval(() => {
+    const delta = (Date.now() - lastTickTime) / 1000;
+    lastTickTime = Date.now();
+    timeLeft = Math.max(0, timeLeft - delta);
+
+    if(isStudyMode) {
+      // Accumulate study time
+      let tot = parseFloat(ls('bb_total_seconds')||'0') + delta;
+      ss('bb_total_seconds', tot);
+
+      // Accumulate today's time
+      const today = new Date().toISOString().slice(0,10);
+      let dayData = JSON.parse(ls('bb_days')||'{}');
+      dayData[today] = (dayData[today]||0) + delta;
+      ss('bb_days', JSON.stringify(dayData));
+
+      // Hydration drain
+      hydrationLevel = Math.max(0, hydrationLevel - (delta * 0.006));
+      updateIVDisplay();
+
+      // Eye strain every 20 min
+      eyeTimer += delta;
+      if(eyeTimer >= 1200) { triggerEyeAlert(); eyeTimer = 0; }
+
+      updateDashboard();
     }
-  }
 
-  function confirmSkip() {
-    if(confirm(`Are you sure? You deserve this, ${userPrefs.name}! 🥺`)) {
-        clearInterval(timerId);
-        showScreen('home');
+    if(timeLeft <= 0) {
+      clearInterval(timerId); timerId = null;
+      handlePhaseEnd();
     }
-  }
+    updateTimerUI();
+  }, 250);
+}
 
-  // --- Streak Logic ---
-  function updateStreak() {
-    const today = new Date().toDateString();
-    if (stats.lastDate !== today) {
-      stats.streak++;
-      stats.lastDate = today;
-      stats.history.push(new Date().getDay());
-      saveData();
-      refreshHome();
+function handlePhaseEnd() {
+  playBell();
+  if(isStudyMode) {
+    // Increment streak
+    let streak = parseInt(ls('bb_streak')||'0') + 1;
+    ss('bb_streak', streak);
+    ss('bb_last_break', Date.now());
+    ss('bb_breaks_taken', (parseInt(ls('bb_breaks_taken')||'0')+1));
+    startTimer(currentBreakMins, 'break');
+  } else {
+    // Track posture completion
+    ss('bb_posture_done', (parseInt(ls('bb_posture_done')||'0')+1));
+    showScreen('homeScreen');
+    // Reset ring
+    const circ = 2 * Math.PI * 88;
+    document.getElementById('ring-progress').style.strokeDashoffset = circ;
+  }
+}
+
+function skipBreak() {
+  clearInterval(timerId); timerId = null;
+  showScreen('homeScreen');
+}
+
+function abortSession() {
+  clearInterval(timerId); timerId = null;
+  eyeTimer = 0;
+  const circ = 2 * Math.PI * 88;
+  document.getElementById('ring-progress').style.strokeDashoffset = circ;
+  showScreen('homeScreen');
+}
+
+/* ═══════════════════════════════════════
+   TIMER UI
+═══════════════════════════════════════ */
+function updateTimerUI() {
+  const d = Math.max(0, Math.ceil(timeLeft));
+  const m = Math.floor(d/60), s = d%60;
+  document.getElementById('timeText').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+
+  // Ring progress
+  const circ = 2 * Math.PI * 88;
+  const prog = 1 - (timeLeft / totalTime);
+  document.getElementById('ring-progress').style.strokeDashoffset = circ * (1 - prog);
+}
+
+/* ═══════════════════════════════════════
+   BREAK CONTENT
+═══════════════════════════════════════ */
+let circuitTimers = [];
+function loadBreakContent() {
+  // Random flashcard
+  const fc = flashcards[Math.floor(Math.random()*flashcards.length)];
+  document.getElementById('flashQ').textContent = fc.q;
+  document.getElementById('flashA').textContent = fc.a;
+  document.getElementById('recallCard').classList.remove('flipped');
+
+  // Posture circuit
+  const cl = document.getElementById('circuitList');
+  cl.innerHTML = '';
+  circuitTimers = [];
+  circuits.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'circuit-item';
+    div.innerHTML = `
+      <div class="circuit-icon">${c.icon}</div>
+      <div class="circuit-info">
+        <div class="circuit-name">${c.name}</div>
+        <div class="circuit-sub">${c.sub}</div>
+        <div class="circuit-bar"><div class="circuit-bar-fill" id="bar-${i}"></div></div>
+      </div>
+      <button onclick="startCircuit(${i},${c.dur})" style="background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;" id="cbtn-${i}">GO</button>
+    `;
+    cl.appendChild(div);
+  });
+}
+
+function startCircuit(idx, dur) {
+  const btn = document.getElementById(`cbtn-${idx}`);
+  const bar = document.getElementById(`bar-${idx}`);
+  btn.disabled = true; btn.textContent = '...';
+  let elapsed = 0;
+  const id = setInterval(() => {
+    elapsed++;
+    bar.style.width = `${(elapsed/dur)*100}%`;
+    btn.textContent = `${dur-elapsed}s`;
+    if(elapsed >= dur) {
+      clearInterval(id);
+      btn.textContent = '✓'; btn.style.background = 'var(--success)';
     }
+  }, 1000);
+}
+
+function flipCard() {
+  document.getElementById('recallCard').classList.toggle('flipped');
+}
+
+/* ═══════════════════════════════════════
+   EYE STRAIN ALERT
+═══════════════════════════════════════ */
+let eyeAlertTimer = null;
+function triggerEyeAlert() {
+  const el = document.getElementById('eyeAlert');
+  const cd = document.getElementById('eyeCountdown');
+  el.style.display = 'block';
+  let t = 20;
+  cd.textContent = t;
+  eyeAlertTimer = setInterval(() => {
+    t--;
+    cd.textContent = t;
+    if(t<=0) { clearInterval(eyeAlertTimer); el.style.display='none'; }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════
+   IV HYDRATION
+═══════════════════════════════════════ */
+function refillHydration() {
+  hydrationLevel = 100;
+  updateIVDisplay();
+  // Log refill
+  let log = JSON.parse(ls('bb_hydration_log')||'[]');
+  log.push({time: Date.now(), pct: 100});
+  ss('bb_hydration_log', JSON.stringify(log));
+}
+
+function updateIVDisplay() {
+  const maxH = 86, yBase = 20;
+  const h = (hydrationLevel / 100) * maxH;
+  const y = yBase + (maxH - h);
+  const fluid = document.getElementById('iv-fluid');
+  fluid.setAttribute('height', h);
+  fluid.setAttribute('y', y);
+  ss('bb_hydration', hydrationLevel);
+  document.getElementById('hydrationPct').textContent =
+    hydrationLevel > 60 ? 'TAP TO REFILL' :
+    hydrationLevel > 30 ? `⚠️ ${Math.round(hydrationLevel)}% — DRINK WATER!` :
+    `🚨 ${Math.round(hydrationLevel)}% — DEHYDRATED!`;
+}
+
+/* ═══════════════════════════════════════
+   DASHBOARD STATS
+═══════════════════════════════════════ */
+function updateDashboard() {
+  const streak = parseInt(ls('bb_streak')||'0');
+  const total = parseFloat(ls('bb_total_seconds')||'0');
+  document.getElementById('streakCount').textContent = streak;
+  document.getElementById('streakDay').textContent = streak;
+  document.getElementById('totalHrs').textContent = (total/3600).toFixed(1);
+  document.getElementById('sessionCount').textContent = ls('bb_sessions')||'0';
+
+  // Rank & XP
+  const rank = getCurrentRank(streak);
+  const next = getNextRank(streak);
+  document.getElementById('rankBadge').textContent = `${rank.emoji} ${rank.title} · Day ${streak}`;
+  if(next) {
+    const pct = Math.min(100, ((streak - rank.days) / (next.days - rank.days)) * 100);
+    document.getElementById('xpFill').style.width = `${pct}%`;
+  } else {
+    document.getElementById('xpFill').style.width = '100%';
+  }
+}
+
+function getCurrentRank(streak) {
+  let r = RANKS[0];
+  for(const rank of RANKS) { if(streak >= rank.days) r = rank; }
+  return r;
+}
+function getNextRank(streak) {
+  return RANKS.find(r => r.days > streak) || null;
+}
+
+/* ═══════════════════════════════════════
+   ANALYTICS
+═══════════════════════════════════════ */
+function renderAnalytics() {
+  const now = new Date();
+  document.getElementById('reportDate').textContent =
+    `Week of ${now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}`;
+
+  const dayData = JSON.parse(ls('bb_days')||'{}');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals = [];
+  const barsEl = document.getElementById('weekBars');
+  const labelsEl = document.getElementById('weekLabels');
+  barsEl.innerHTML = ''; labelsEl.innerHTML = '';
+
+  // Get last 7 days
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    vals.push({label:days[d.getDay()===0?6:d.getDay()-1], sec:dayData[key]||0});
   }
 
-  function refreshHome() {
-    document.getElementById('greeting').innerText = `Hello, ${userPrefs.name}!`;
-    document.getElementById('streakCount').innerText = stats.streak;
-    
-    let milestone = "Great start, Doctor Supriya! 🌱";
-    if (stats.streak >= 30) milestone = "30 days! You're an absolute legend! 👑";
-    else if (stats.streak >= 7) milestone = "One whole week of self-care! Incredible! 🏆";
-    else if (stats.streak >= 3) milestone = "3 days strong! Building a habit! 💪";
-    document.getElementById('streakMilestone').innerText = milestone;
+  const maxSec = Math.max(...vals.map(v=>v.sec), 3600);
+  vals.forEach(v => {
+    const wrap = document.createElement('div');
+    wrap.className = 'day-bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'day-bar';
+    const hPct = (v.sec / maxSec) * 70;
+    bar.style.height = `${Math.max(4,hPct)}px`;
+    bar.title = `${(v.sec/3600).toFixed(1)}h`;
+    const lbl = document.createElement('div');
+    lbl.className = 'day-label';
+    lbl.textContent = v.label;
+    wrap.appendChild(bar);
+    barsEl.appendChild(wrap);
+    const l2 = document.createElement('div');
+    l2.className = 'day-label';
+    l2.style.cssText='font-size:9px;color:var(--text-muted);flex:1;text-align:center;';
+    l2.textContent=`${(v.sec/3600).toFixed(1)}h`;
+    labelsEl.appendChild(l2);
+  });
 
-    // Update Calendar dots
-    const dots = document.querySelectorAll('.day-dot');
-    const dayIndex = new Date().getDay(); // 0 is Sun, 1 is Mon
-    dots.forEach((dot, i) => {
-        const adjustedIdx = i === 6 ? 0 : i + 1; // Map UI (M-S) to Date() (S-S)
-        if(stats.history.includes(adjustedIdx)) dot.classList.add('active');
-    });
+  // Metrics
+  const started = parseInt(ls('bb_sessions_started')||'0');
+  const taken = parseInt(ls('bb_breaks_taken')||'0');
+  const postureDone = parseInt(ls('bb_posture_done')||'0');
+  const postureTotal = taken;
+  const adhPct = started > 0 ? Math.round((taken/started)*100) : 0;
+  const posturePct = postureTotal > 0 ? Math.round((postureDone/postureTotal)*100) : 0;
+
+  document.getElementById('adherenceRate').textContent = `${adhPct}%`;
+  document.getElementById('surgeryHrs').textContent =
+    `${(parseFloat(ls('bb_total_seconds')||'0')/3600).toFixed(1)}h`;
+  document.getElementById('postureScore').textContent = `${posturePct}%`;
+  document.getElementById('totalSessions').textContent = ls('bb_sessions')||'0';
+
+  // Hydration log
+  const hlog = JSON.parse(ls('bb_hydration_log')||'[]');
+  const hEl = document.getElementById('hydrationLog');
+  if(hlog.length === 0) {
+    hEl.textContent = 'No refills logged yet.';
+  } else {
+    hEl.innerHTML = hlog.slice(-5).reverse().map(h => {
+      const t = new Date(h.time);
+      return `<div style="padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.05);">💧 Refilled at ${t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>`;
+    }).join('');
+  }
+}
+
+/* ═══════════════════════════════════════
+   RANKS & THEMES
+═══════════════════════════════════════ */
+function renderRanks() {
+  const streak = parseInt(ls('bb_streak')||'0');
+  const currentRank = getCurrentRank(streak);
+  const rl = document.getElementById('rankList');
+  rl.innerHTML = '';
+  RANKS.forEach(r => {
+    const done = streak >= r.days;
+    const isCurrent = r.id === currentRank.id;
+    const row = document.createElement('div');
+    row.className = `rank-row ${isCurrent?'current':''} ${!done&&!isCurrent?'locked':''}`;
+    let themeHtml = '';
+    if(r.theme) {
+      const th = THEMES.find(t=>t.id===r.theme);
+      themeHtml = `<div class="theme-unlock">Unlocks ${th.label} theme
+        <div class="theme-swatch">
+          ${th.colors.map(c=>`<span class="swatch" style="background:${c}"></span>`).join('')}
+        </div></div>`;
+    }
+    row.innerHTML = `
+      <div class="rank-emoji">${r.emoji}</div>
+      <div class="rank-info">
+        <h4>${r.title}</h4>
+        <p>${r.id==='intern'?'Start':'Day '+r.days+'+ streak'}</p>
+        ${themeHtml}
+      </div>
+      <span class="rank-badge-status ${isCurrent?'status-current':done?'status-done':'status-locked'}">
+        ${isCurrent?'CURRENT':done?'✓ DONE':'LOCKED'}
+      </span>`;
+    rl.appendChild(row);
+  });
+
+  // Theme buttons
+  const tb = document.getElementById('themeButtons');
+  tb.innerHTML = '';
+  THEMES.forEach(t => {
+    const unlocked = streak >= t.req;
+    const btn = document.createElement('button');
+    btn.style.cssText = `border:2px solid ${unlocked?t.colors[0]:'#ddd'};background:${unlocked?t.colors[0]+'22':'#f5f5f5'};color:${unlocked?t.colors[0]:'#aaa'};padding:6px 14px;border-radius:50px;font-size:11px;font-weight:700;cursor:${unlocked?'pointer':'not-allowed'};transition:0.2s;`;
+    btn.textContent = unlocked ? `🎨 ${t.label}` : `🔒 ${t.label} (Day ${t.req})`;
+    if(unlocked) btn.onclick = () => { applyTheme(t.id); renderRanks(); };
+    tb.appendChild(btn);
+  });
+}
+
+function applyTheme(id) {
+  document.body.className = id === 'default' ? '' : `theme-${id}`;
+  ss('bb_theme', id);
+}
+
+/* ═══════════════════════════════════════
+   AMBIENT SOUNDS (Web Audio API)
+═══════════════════════════════════════ */
+function getAudioCtx() {
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function createBrownNoise(ctx) {
+  const bufSize = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let lastOut = 0;
+  for(let i=0;i<bufSize;i++){
+    const white = Math.random()*2-1;
+    data[i] = (lastOut + 0.02*white)/1.02;
+    lastOut = data[i];
+    data[i] *= 3.5;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  return src;
+}
+
+function createRainNoise(ctx) {
+  const bufSize = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1) * 0.4;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  // High-pass for rain feel
+  const hp = ctx.createBiquadFilter();
+  hp.type='highpass'; hp.frequency.value=1000;
+  src.connect(hp);
+  return {source:src, extra:hp};
+}
+
+function createLibraryNoise(ctx) {
+  const bufSize = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1)*0.015;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const lp = ctx.createBiquadFilter();
+  lp.type='lowpass'; lp.frequency.value=800;
+  src.connect(lp);
+  return {source:src, extra:lp};
+}
+
+function toggleSound(type) {
+  const ctx = getAudioCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+
+  // Stop current if same
+  if(activeSound === type) {
+    stopAllSounds();
+    return;
+  }
+  stopAllSounds();
+
+  let gain = ctx.createGain();
+  gain.gain.value = currentVolume * 0.5;
+  gain.connect(ctx.destination);
+
+  let srcNode, extraNode;
+  if(type === 'brown') {
+    srcNode = createBrownNoise(ctx);
+    srcNode.connect(gain);
+  } else if(type === 'rain') {
+    const r = createRainNoise(ctx);
+    srcNode = r.source; extraNode = r.extra;
+    extraNode.connect(gain);
+  } else {
+    const l = createLibraryNoise(ctx);
+    srcNode = l.source; extraNode = l.extra;
+    extraNode.connect(gain);
   }
 
-  // --- Utilities ---
-  function notify(title, body) {
-    if (Notification.permission === "granted") new Notification(title, { body });
-  }
+  srcNode.start();
+  audioNodes = {gain, source:srcNode, extra:extraNode};
+  activeSound = type;
+  document.querySelectorAll('.sound-btn').forEach(b=>b.classList.remove('playing'));
+  document.getElementById(`snd-${type}`).classList.add('playing');
+}
 
-  function updatePrefs() {
-    userPrefs.name = document.getElementById('prefName').value || "Doctor Supriya";
-    userPrefs.session = parseInt(document.getElementById('prefSession').value);
-    userPrefs.sound = document.getElementById('prefSound').checked;
-    saveData();
-    refreshHome();
-  }
+function stopAllSounds() {
+  if(audioNodes.source) { try{audioNodes.source.stop();}catch(e){} }
+  activeSound = null;
+  document.querySelectorAll('.sound-btn').forEach(b=>b.classList.remove('playing'));
+}
 
-  function saveData() {
-    localStorage.setItem('bb_prefs', JSON.stringify(userPrefs));
-    localStorage.setItem('bb_stats', JSON.stringify(stats));
-  }
+function setVolume(val) {
+  currentVolume = val/100;
+  if(audioNodes.gain) audioNodes.gain.gain.value = currentVolume * 0.5;
+}
 
-  function resetApp() {
-    clearInterval(timerId);
-    showScreen('home');
-  }
+/* ═══════════════════════════════════════
+   BELL SOUND
+═══════════════════════════════════════ */
+function playBell() {
+  const ctx = getAudioCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = 880; osc.type='sine';
+  gain.gain.setValueAtTime(0.6, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+2);
+  osc.start(); osc.stop(ctx.currentTime+2);
+  // Second tone
+  setTimeout(()=>{
+    const o2=ctx.createOscillator(), g2=ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.frequency.value=660; o2.type='sine';
+    g2.gain.setValueAtTime(0.4,ctx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.5);
+    o2.start(); o2.stop(ctx.currentTime+1.5);
+  }, 300);
+}
 
-  function resetStreak() {
-    if(confirm("Reset all data?")) { localStorage.clear(); location.reload(); }
-  }
+/* ═══════════════════════════════════════
+   DO NOT DISTURB (Surgery Mode)
+═══════════════════════════════════════ */
+function setupDND() {
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden && isStudyMode && timerId) {
+      dndActive = true;
+      document.getElementById('dndBanner').style.display = 'block';
+    }
+  });
 
-  // Init
-  Notification.requestPermission();
-  document.getElementById('prefName').value = userPrefs.name;
-  document.getElementById('prefSession').value = userPrefs.session;
-  refreshHome();
+  window.addEventListener('focus', () => {
+    if(dndActive) {
+      dndActive = false;
+      document.getElementById('dndOverlay').classList.remove('show');
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    if(isStudyMode && timerId) {
+      setTimeout(()=>{
+        if(document.hidden || !document.hasFocus()) {
+          document.getElementById('dndOverlay').classList.add('show');
+        }
+      }, 1500);
+    }
+  });
+}
+
+function dismissDND() {
+  document.getElementById('dndOverlay').classList.remove('show');
+  dndActive = false;
+}
+
+/* ═══════════════════════════════════════
+   TO-DO LIST
+═══════════════════════════════════════ */
+function addTodo() {
+  const val = document.getElementById('newTaskInput').value.trim();
+  if(!val) return;
+  const t = JSON.parse(ls('bb_todos')||'[]');
+  t.push({text:val, done:false, id:Date.now()});
+  ss('bb_todos', JSON.stringify(t));
+  document.getElementById('newTaskInput').value='';
+  renderTodos();
+}
+
+function renderTodos() {
+  const t = JSON.parse(ls('bb_todos')||'[]');
+  const el = document.getElementById('todoList');
+  if(t.length===0) {
+    el.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">No tasks yet. Add one below!</div>';
+    return;
+  }
+  el.innerHTML = t.map((x,i)=>`
+    <div class="todo-item">
+      <input type="checkbox" ${x.done?'checked':''} onchange="toggleTodo(${i})">
+      <span class="todo-text ${x.done?'done':''}">${x.text}</span>
+      <button class="todo-del" onclick="deleteTodo(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleTodo(i) {
+  const t = JSON.parse(ls('bb_todos')||'[]');
+  t[i].done = !t[i].done;
+  ss('bb_todos', JSON.stringify(t));
+  renderTodos();
+}
+
+function deleteTodo(i) {
+  const t = JSON.parse(ls('bb_todos')||'[]');
+  t.splice(i,1);
+  ss('bb_todos', JSON.stringify(t));
+  renderTodos();
+}
 </script>
 </body>
 </html>
