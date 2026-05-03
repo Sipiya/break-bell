@@ -496,7 +496,10 @@ const RANKS = [
 
 const THEMES = [
   {id:'default',   label:'Navy Blue',   colors:['#1a2744','#3d9be9','#f0a500'], req:0},
-  {id:'emerald',   label:'Emerald',     colors:['#0d3320','#22c55e','#f0a500'], req:7}
+  {id:'emerald',   label:'Emerald',     colors:['#0d3320','#22c55e','#f0a500'], req:7},
+  {id:'lavender',  label:'Lavender',    colors:['#2d1b5e','#a78bfa','#f472b6'], req:22},
+  {id:'crimson',   label:'Crimson',     colors:['#3b0a0a','#ef4444','#fb923c'], req:0},
+  {id:'teal',      label:'Teal',        colors:['#0a2e2e','#14b8a6','#f0a500'], req:100}
 ];
 
 window.onload = () => {
@@ -510,6 +513,8 @@ window.onload = () => {
   const r = document.getElementById('ring-progress');
   r.style.strokeDasharray = circ;
   r.style.strokeDashoffset = circ;
+  requestNotifPermission();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
 };
 
 function showScreen(id) {
@@ -558,6 +563,7 @@ function runTimer() {
     if(isStudyMode) {
       let tot = parseFloat(ls('bb_total_seconds')||'0') + delta;
       ss('bb_total_seconds', tot);
+      trackDailySeconds(delta);
       hydrationLevel = Math.max(0, hydrationLevel - (delta * 0.006));
       updateIVDisplay();
       eyeTimer += delta;
@@ -575,9 +581,11 @@ function handlePhaseEnd() {
     let streak = parseInt(ls('bb_streak')||'0') + 1;
     ss('bb_streak', streak);
     ss('bb_breaks_taken', (parseInt(ls('bb_breaks_taken')||'0')+1));
+    sendNotification('Session Complete! 🩺', 'Great work, Dr. Supriya! Time for your ' + currentBreakMins + '-min recovery break.');
     startTimer(currentBreakMins, 'break');
   } else {
     ss('bb_posture_done', (parseInt(ls('bb_posture_done')||'0')+1));
+    sendNotification('Break Over! ⏱', 'Break complete. Ready for the next clinical focus session?');
     showScreen('homeScreen');
   }
 }
@@ -651,6 +659,139 @@ function renderTodos() {
 
 function toggleTodo(i) { const t = JSON.parse(ls('bb_todos')||'[]'); t[i].done = !t[i].done; ss('bb_todos', JSON.stringify(t)); renderTodos(); }
 function deleteTodo(i) { const t = JSON.parse(ls('bb_todos')||'[]'); t.splice(i,1); ss('bb_todos', JSON.stringify(t)); renderTodos(); }
+
+/* ── NOTIFICATIONS ── */
+function requestNotifPermission() {
+  if('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function sendNotification(title, body) {
+  if(!('Notification' in window)) return;
+  const iconSvg = "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect fill='#2C3E50' width='64' height='64' rx='12'/><text x='32' y='44' font-size='36' text-anchor='middle'>\uD83E\uDE7A</text></svg>");
+  if(Notification.permission === 'granted') {
+    try { new Notification(title, { body: body, icon: iconSvg, vibrate: [200,100,200] }); } catch(e){}
+  } else if(Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { if(p === 'granted') sendNotification(title, body); });
+  }
+}
+
+/* ── SOUND ── */
+function toggleSound(type) {
+  const ctx = getAudioCtx();
+  if(activeSound === type) {
+    if(audioNodes[type]) { try { audioNodes[type].stop(); } catch(e){} delete audioNodes[type]; }
+    if(audioNodes[type+'_gain']) delete audioNodes[type+'_gain'];
+    activeSound = null;
+    document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('playing'));
+    return;
+  }
+  if(activeSound && audioNodes[activeSound]) { try { audioNodes[activeSound].stop(); } catch(e){} delete audioNodes[activeSound]; }
+  document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('playing'));
+  document.getElementById('snd-'+type).classList.add('playing');
+  activeSound = type;
+  const bufSz = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0; i<bufSz; i++) data[i] = (Math.random()*2-1);
+  if(type==='brown') {
+    let last=0; for(let i=0;i<bufSz;i++){data[i]=(last*0.98+data[i]*0.02);last=data[i];data[i]*=3.5;}
+  } else if(type==='library') {
+    for(let i=0;i<bufSz;i++) data[i]*=0.12;
+  }
+  const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+  const gain = ctx.createGain(); gain.gain.value = currentVolume;
+  src.connect(gain); gain.connect(ctx.destination); src.start();
+  audioNodes[type] = src; audioNodes[type+'_gain'] = gain;
+}
+
+function setVolume(v) {
+  currentVolume = v/100;
+  Object.keys(audioNodes).forEach(k => { if(k.endsWith('_gain') && audioNodes[k].gain) audioNodes[k].gain.value = currentVolume; });
+}
+
+/* ── REPORT / ANALYTICS ── */
+function renderAnalytics() {
+  const now = new Date();
+  document.getElementById('reportDate').textContent = 'Week of ' + now.toDateString();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dailyData = JSON.parse(ls('bb_daily')||'{}');
+  let maxH = 0;
+  const weekVals = [];
+  for(let i=6;i>=0;i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const hrs = parseFloat(dailyData[key]||'0');
+    weekVals.push({label:days[d.getDay()], hrs});
+    if(hrs>maxH) maxH=hrs;
+  }
+  let barsHTML='', labelsHTML='';
+  weekVals.forEach(function(item){
+    const h = maxH>0 ? Math.max(4, Math.round((item.hrs/maxH)*72)) : 4;
+    barsHTML += '<div class="day-bar-wrap"><div class="day-bar" style="height:'+h+'px;" title="'+item.hrs.toFixed(1)+'h"></div></div>';
+    labelsHTML += '<div class="day-label" style="flex:1;text-align:center;">'+item.label+'</div>';
+  });
+  document.getElementById('weekBars').innerHTML = barsHTML;
+  document.getElementById('weekLabels').innerHTML = labelsHTML;
+  const totalSecs = parseFloat(ls('bb_total_seconds')||'0');
+  const sessionsStarted = parseInt(ls('bb_sessions_started')||'0');
+  const breaksDone = parseInt(ls('bb_breaks_taken')||'0');
+  const postureDone = parseInt(ls('bb_posture_done')||'0');
+  const adherence = sessionsStarted>0 ? Math.min(100,Math.round((breaksDone/sessionsStarted)*100)) : 0;
+  const postureScore = sessionsStarted>0 ? Math.min(100,Math.round((postureDone/Math.max(1,sessionsStarted))*100)) : 0;
+  document.getElementById('adherenceRate').textContent = adherence+'%';
+  document.getElementById('surgeryHrs').textContent = (totalSecs/3600).toFixed(1)+'h';
+  document.getElementById('postureScore').textContent = postureScore+'%';
+  document.getElementById('totalSessions').textContent = parseInt(ls('bb_sessions')||'0');
+  const hydration = parseFloat(ls('bb_hydration')||'100');
+  document.getElementById('hydrationLog').innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-top:4px;">' +
+    '<div style="flex:1;height:8px;background:rgba(0,0,0,0.08);border-radius:4px;overflow:hidden;">' +
+    '<div style="height:100%;width:'+hydration+'%;background:var(--water);border-radius:4px;"></div></div>' +
+    '<span style="font-family:JetBrains Mono,monospace;font-weight:700;color:var(--primary);">'+Math.round(hydration)+'%</span></div>' +
+    '<div style="font-size:11px;margin-top:6px;color:var(--text-muted);">Current IV level · Tap bag on home to refill</div>';
+}
+
+/* ── RANKS & THEMES ── */
+function renderRanks() {
+  const streak = parseInt(ls('bb_streak')||'0');
+  const currentRank = RANKS.slice().reverse().find(function(r){return streak>=r.days;}) || RANKS[0];
+  const rankListEl = document.getElementById('rankList');
+  rankListEl.innerHTML = RANKS.map(function(r){
+    const isCurrent = r.id === currentRank.id;
+    const isLocked = streak < r.days;
+    let statusHTML = isCurrent
+      ? '<span class="rank-badge-status status-current">CURRENT</span>'
+      : isLocked
+        ? '<span class="rank-badge-status status-locked">\uD83D\uDD12 Day '+r.days+'</span>'
+        : '<span class="rank-badge-status status-done">\u2713 DONE</span>';
+    const themeUnlock = r.theme ? '<div class="theme-unlock">\uD83C\uDFA8 Unlocks '+r.theme.charAt(0).toUpperCase()+r.theme.slice(1)+' Scrubs at Day '+r.days+'</div>' : '';
+    return '<div class="rank-row'+(isCurrent?' current':'')+(isLocked?' locked':'')+'">'+
+      '<div class="rank-emoji">'+r.emoji+'</div>'+
+      '<div class="rank-info"><h4>'+r.title+'</h4><p>'+(r.days===0?'Starting rank':'Day '+r.days+' milestone')+'</p>'+themeUnlock+'</div>'+
+      statusHTML+'</div>';
+  }).join('');
+
+  const themeEl = document.getElementById('themeButtons');
+  themeEl.innerHTML = THEMES.map(function(t){
+    const unlocked = streak >= t.req;
+    const active = (ls('bb_theme')||'default') === t.id;
+    const swatches = t.colors.map(function(c){ return '<span style="width:12px;height:12px;border-radius:50%;background:'+c+';display:inline-block;"></span>'; }).join('');
+    return '<button onclick="'+(unlocked?"applyTheme('"+t.id+"');renderRanks()":'')+'" style="border:2px solid '+(active?'var(--accent)':'var(--card-border)')+';background:'+(active?'rgba(61,155,233,0.12)':'var(--card)')+';border-radius:12px;padding:8px 12px;cursor:'+(unlocked?'pointer':'not-allowed')+';opacity:'+(unlocked?1:0.4)+';display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--primary);">'+
+      '<span style="display:flex;gap:3px;">'+swatches+'</span>'+t.label+(unlocked?'':' \uD83D\uDD12')+
+    '</button>';
+  }).join('');
+}
+
+/* ── TRACK DAILY HOURS ── */
+function trackDailySeconds(delta) {
+  const key = new Date().toISOString().slice(0,10);
+  const daily = JSON.parse(ls('bb_daily')||'{}');
+  daily[key] = (parseFloat(daily[key]||'0') + delta/3600);
+  ss('bb_daily', JSON.stringify(daily));
+}
+
 </script>
 </body>
 </html>
