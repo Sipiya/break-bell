@@ -1,13 +1,13 @@
 {
-  "name": "Dr. Supriya's Break Bell",
-  "short_name": "Break Bell",
-  "start_url": "./index.html",
+  "name": "Dr. Supriya's Clinical Bell",
+  "short_name": "The Resident",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#FDFBFF",
-  "theme_color": "#5A4BAA",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2C3E50",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235A4BAA' width='192' height='192'/><text x='96' y='96' font-size='120' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔔</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232C3E50' width='192' height='192'/><path d='M160 96c0 35.3-28.7 64-64 64s-64-28.7-64-64 28.7-64 64-64 64 28.7 64 64z' fill='%233498DB'/><text x='96' y='110' font-size='60' fill='white' text-anchor='middle' font-weight='bold'>Dr</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml"
     }
