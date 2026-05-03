@@ -749,8 +749,17 @@ function requestNotifPermission() {
 function sendNotification(title, body) {
   if(!('Notification' in window)) return;
   const iconSvg = "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect fill='#2C3E50' width='64' height='64' rx='12'/><text x='32' y='44' font-size='36' text-anchor='middle'>\uD83E\uDE7A</text></svg>");
+  const opts = { body: body, icon: iconSvg, badge: iconSvg, vibrate: [200,100,200,100,200], requireInteraction: true, tag: 'dr-supriya-bell' };
   if(Notification.permission === 'granted') {
-    try { new Notification(title, { body: body, icon: iconSvg, vibrate: [200,100,200] }); } catch(e){}
+    if('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, opts);
+      }).catch(() => {
+        try { new Notification(title, opts); } catch(e){}
+      });
+    } else {
+      try { new Notification(title, opts); } catch(e){}
+    }
   } else if(Notification.permission === 'default') {
     Notification.requestPermission().then(p => { if(p === 'granted') sendNotification(title, body); });
   }
